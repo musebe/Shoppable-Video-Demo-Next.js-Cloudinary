@@ -5,6 +5,11 @@ import { motion } from 'motion/react';
 import { Button } from '@/components/ui/button';
 
 export function Navbar() {
+  const links = [
+    { label: 'Home', href: '/' },
+    { label: 'About Shoppable', href: '/about' },
+  ];
+
   return (
     <motion.nav
       initial={{ y: -100, opacity: 0 }}
@@ -16,9 +21,10 @@ export function Navbar() {
         <Link href='/' className='text-2xl font-extrabold'>
           ShoppableVideo
         </Link>
+
         <div className='flex gap-4'>
-          {['Home', 'Shop'].map((label) => (
-            <Link key={label} href={label === 'Home' ? '/' : '/shop'}>
+          {links.map(({ label, href }) => (
+            <Link key={label} href={href}>
               <motion.div
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
