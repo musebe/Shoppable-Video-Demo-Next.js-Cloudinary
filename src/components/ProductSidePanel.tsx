@@ -2,9 +2,9 @@
 
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import Image from 'next/image';
 import Link from 'next/link';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 
 type Product = {
   productId: number;
@@ -29,7 +29,7 @@ type Props = {
   resetSignal: number;
 };
 
-const BUFFER = 0.15; // delay before a card *appears*
+const BUFFER = 0.15; // fade-in delay
 const SCROLL_PAD = 12; // px padding under header
 
 export function ProductSidePanel({
@@ -38,27 +38,24 @@ export function ProductSidePanel({
   resetSignal,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
-
-  /** store refs by id; callback returns *void* so TS is happy */
   const productRefs = useRef<Record<number, HTMLDivElement>>({});
-
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   const [seenIds, setSeenIds] = useState<number[]>([]);
 
-  /* ── Reset panel when the user hits “replay” ── */
+  /* reset on replay */
   useEffect(() => {
     setSeenIds([]);
     productRefs.current = {};
     containerRef.current?.scrollTo({ top: 0 });
   }, [resetSignal]);
 
-  /* ── One-time: get Cloudinary video element ── */
+  /* capture Cloudinary video once */
   useEffect(() => {
     videoRef.current = document.querySelector('video#cld-video');
   }, []);
 
-  /* ── Mark products as “seen” once their cue starts ── */
+  /* mark products as seen */
   useEffect(() => {
     const newSeen = products
       .filter(
@@ -70,38 +67,33 @@ export function ProductSidePanel({
     if (newSeen.length) setSeenIds((prev) => [...prev, ...newSeen]);
   }, [currentTime, products, seenIds]);
 
-  /* ── Derived lists ── */
-  const visibleProducts = products.filter((p) => seenIds.includes(p.productId));
+  const visible = products.filter((p) => seenIds.includes(p.productId));
 
-  const activeProduct = products.find(
+  const active = products.find(
     (p) => currentTime >= p.startTime && currentTime <= p.endTime
   );
 
-  /* ── Scroll whenever the *active* product changes ── */
+  /* scroll to active card */
   useEffect(() => {
-    if (!activeProduct) return;
-
-    const el = productRefs.current[activeProduct.productId];
+    if (!active) return;
+    const el = productRefs.current[active.productId];
     const wrap = containerRef.current;
     if (!el || !wrap) return;
 
     requestAnimationFrame(() => {
-      wrap.scrollTo({
-        top: el.offsetTop - SCROLL_PAD,
-        behavior: 'smooth',
-      });
+      wrap.scrollTo({ top: el.offsetTop - SCROLL_PAD, behavior: 'smooth' });
     });
-  }, [activeProduct?.productId, visibleProducts.length]);
+  }, [active?.productId, visible.length]);
 
-  /* ── Clicking a thumbnail seeks the video ── */
-  const handleSeek = (time: number) => {
+  /* seek helper */
+  const handleSeek = (t: number) => {
     if (videoRef.current) {
-      videoRef.current.currentTime = time;
+      videoRef.current.currentTime = t;
       videoRef.current.play();
     }
   };
 
-  /* ────────────────── JSX ────────────────── */
+  /* ───────── render ───────── */
   return (
     <div
       ref={containerRef}
@@ -109,19 +101,19 @@ export function ProductSidePanel({
     >
       <h2 className='text-lg font-semibold mb-2'>Now Showing</h2>
 
-      {visibleProducts.length === 0 ? (
+      {visible.length === 0 ? (
         <p className='text-muted-foreground text-sm italic'>
           No products have appeared yet.
         </p>
       ) : (
-        visibleProducts.map((product) => {
-          const isActive = activeProduct?.productId === product.productId;
+        visible.map((p) => {
+          const isActive = p.productId === active?.productId;
 
           return (
             <motion.div
-              key={product.productId}
+              key={p.productId}
               ref={(el) => {
-                if (el) productRefs.current[product.productId] = el;
+                if (el) productRefs.current[p.productId] = el;
               }}
               initial={{ x: 30, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
@@ -135,35 +127,38 @@ export function ProductSidePanel({
               >
                 <CardHeader className='p-2 pb-0'>
                   <CardTitle className='text-sm font-semibold'>
-                    {product.productName}
+                    {p.productName}
                   </CardTitle>
                 </CardHeader>
 
                 <CardContent className='p-2 flex flex-col justify-between flex-1'>
+                  {/* thumbnail → seek */}
                   <button
-                    onClick={() => handleSeek(product.startTime)}
-                    className='w-full mb-2 flex-1'
                     type='button'
+                    onClick={() => handleSeek(p.startTime)}
+                    className='w-full mb-2 flex-1'
                   >
                     <Image
-                      src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/w_300,h_300,c_pad/${product.publicId}.jpg`}
-                      alt={product.productName}
+                      onClick={() => handleSeek(p.startTime)}
+                      src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/w_300,h_300,c_pad/${p.publicId}.jpg`}
+                      alt={p.productName}
                       width={300}
                       height={300}
                       sizes='(min-width:1024px) 256px, 100vw'
-                      className='rounded-md object-contain w-full h-full'
                       priority={isActive}
+                      className='rounded-md object-contain w-full h-full'
                     />
                   </button>
 
+                  {/* buy link */}
                   <Link
-                    href={product.onClick.args.url}
+                    href={p.onClick.args.url}
                     className='inline-block w-full text-center py-1.5 px-2 text-xs font-medium bg-primary text-white rounded hover:bg-primary/90 transition'
                   >
                     Buy&nbsp;Now →
                   </Link>
 
-                  {/* Discount banner kept exactly as before */}
+                  {/* discount banner */}
                   <div className='mt-2 text-xs text-center text-green-600 animate-pulse'>
                     🎉 Use code <strong>LOVE20</strong> for 20% off!
                   </div>
