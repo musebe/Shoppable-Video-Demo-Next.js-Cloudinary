@@ -1,20 +1,19 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 import { motion, useReducedMotion } from 'motion/react';
 import { createShoppablePlayer } from '@/lib/cloudinary-player';
 import { SHOPPABLE_CONFIG } from '@/lib/shoppable-config';
 
-type Props = {
-  onTimeUpdate: (t: number) => void;
-};
+type Props = { onTimeUpdate: (t: number) => void };
 
 export function ShoppableVideoPlayer({ onTimeUpdate }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const prefersReducedMotion = useReducedMotion();
 
   useEffect(() => {
-    if (!videoRef.current) return;
+    const videoEl = videoRef.current;
+    if (!videoEl) return;
 
     const cloudName = process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME;
     if (!cloudName) {
@@ -23,8 +22,7 @@ export function ShoppableVideoPlayer({ onTimeUpdate }: Props) {
     }
 
     let dispose: () => void;
-
-    createShoppablePlayer(videoRef.current.id, {
+    createShoppablePlayer(videoEl.id, {
       cloud_name: cloudName,
       fluid: true,
       autoplay: true,
@@ -32,37 +30,33 @@ export function ShoppableVideoPlayer({ onTimeUpdate }: Props) {
       controls: true,
     })
       .then((player) => {
-        const startState = prefersReducedMotion ? 'open' : 'closed';
-
         player.source('shoppable-video/shoppable_demo', {
           ...SHOPPABLE_CONFIG,
           shoppable: {
             ...SHOPPABLE_CONFIG.shoppable,
-            startState,
+            startState: prefersReducedMotion ? 'open' : 'closed',
             autoClose: 0,
           },
           sourceTypes: ['mp4'],
           resourceType: 'video',
         });
 
-        let lastT = 0;
-
-        function handleTime() {
+        let last = 0;
+        const onTick = () => {
           const t = player.currentTime();
-          if (Math.abs(t - lastT) >= 0.25) {
+          if (Math.abs(t - last) >= 0.25) {
             onTimeUpdate(t);
-            lastT = t;
+            last = t;
           }
-        }
-
-        player.on('timeupdate', handleTime);
+        };
+        player.on('timeupdate', onTick);
 
         dispose = () => {
-          player.off('timeupdate', handleTime);
+          player.off('timeupdate', onTick);
           player.dispose();
         };
       })
-      .catch((err) => console.error('Cloudinary player error:', err));
+      .catch((e) => console.error('Cloudinary player error:', e));
 
     return () => dispose?.();
   }, [prefersReducedMotion, onTimeUpdate]);

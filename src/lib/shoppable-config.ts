@@ -17,7 +17,7 @@ export const SHOPPABLE_CONFIG = {
                 productName: 'Sunglasses',
                 startTime: 0.2,
                 endTime: 2,
-                publicId: 'shoppable-video/sunglasses',
+                publicId: 'shoppable-video/sunglasses2',
                 onClick: {
                     action: 'goto',
                     pause: true,

@@ -3,6 +3,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import Image from 'next/image';
+import Link from 'next/link';
 
 type Product = {
   productId: number;
@@ -27,7 +29,8 @@ type Props = {
   resetSignal: number;
 };
 
-const BUFFER = 0.15; // small delay for better sync
+const BUFFER = 0.15; // delay before a card *appears*
+const SCROLL_PAD = 12; // px padding under header
 
 export function ProductSidePanel({
   products,
@@ -35,65 +38,62 @@ export function ProductSidePanel({
   resetSignal,
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
-  const productRefs = useRef<Record<number, HTMLDivElement | null>>({});
+
+  /** store refs by id; callback returns *void* so TS is happy */
+  const productRefs = useRef<Record<number, HTMLDivElement>>({});
+
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
-  const [seenProductIds, setSeenProductIds] = useState<number[]>([]);
+  const [seenIds, setSeenIds] = useState<number[]>([]);
 
-  // 🔁 Reset on replay
+  /* ── Reset panel when the user hits “replay” ── */
   useEffect(() => {
-    setSeenProductIds([]);
+    setSeenIds([]);
     productRefs.current = {};
-    if (containerRef.current) {
-      containerRef.current.scrollTo({ top: 0 });
-    }
+    containerRef.current?.scrollTo({ top: 0 });
   }, [resetSignal]);
 
-  // 🎥 Get video reference
+  /* ── One-time: get Cloudinary video element ── */
   useEffect(() => {
-    if (typeof window !== 'undefined') {
-      videoRef.current = document.querySelector('video#cld-video');
-    }
+    videoRef.current = document.querySelector('video#cld-video');
   }, []);
 
-  // ✅ Update seen products over time
+  /* ── Mark products as “seen” once their cue starts ── */
   useEffect(() => {
     const newSeen = products
       .filter(
         (p) =>
-          currentTime >= p.startTime + BUFFER &&
-          !seenProductIds.includes(p.productId)
+          currentTime >= p.startTime + BUFFER && !seenIds.includes(p.productId)
       )
       .map((p) => p.productId);
 
-    if (newSeen.length > 0) {
-      setSeenProductIds((prev) => [...prev, ...newSeen]);
-    }
-  }, [currentTime]);
+    if (newSeen.length) setSeenIds((prev) => [...prev, ...newSeen]);
+  }, [currentTime, products, seenIds]);
 
-  const visibleProducts = products.filter((p) =>
-    seenProductIds.includes(p.productId)
-  );
+  /* ── Derived lists ── */
+  const visibleProducts = products.filter((p) => seenIds.includes(p.productId));
 
   const activeProduct = products.find(
-    (p) => currentTime >= p.startTime + BUFFER && currentTime <= p.endTime
+    (p) => currentTime >= p.startTime && currentTime <= p.endTime
   );
 
-  // 🔁 Scroll to active product
+  /* ── Scroll whenever the *active* product changes ── */
   useEffect(() => {
-    if (!activeProduct?.productId || !containerRef.current) return;
+    if (!activeProduct) return;
+
+    const el = productRefs.current[activeProduct.productId];
+    const wrap = containerRef.current;
+    if (!el || !wrap) return;
 
     requestAnimationFrame(() => {
-      const el = productRefs.current[activeProduct.productId];
-      if (!el || !containerRef.current) return;
-
-      containerRef.current.scrollTo({
-        top: el.offsetTop - 12,
+      wrap.scrollTo({
+        top: el.offsetTop - SCROLL_PAD,
         behavior: 'smooth',
       });
     });
   }, [activeProduct?.productId, visibleProducts.length]);
 
+  /* ── Clicking a thumbnail seeks the video ── */
   const handleSeek = (time: number) => {
     if (videoRef.current) {
       videoRef.current.currentTime = time;
@@ -101,6 +101,7 @@ export function ProductSidePanel({
     }
   };
 
+  /* ────────────────── JSX ────────────────── */
   return (
     <div
       ref={containerRef}
@@ -120,7 +121,7 @@ export function ProductSidePanel({
             <motion.div
               key={product.productId}
               ref={(el) => {
-                productRefs.current[product.productId] = el;
+                if (el) productRefs.current[product.productId] = el;
               }}
               initial={{ x: 30, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
@@ -137,23 +138,32 @@ export function ProductSidePanel({
                     {product.productName}
                   </CardTitle>
                 </CardHeader>
+
                 <CardContent className='p-2 flex flex-col justify-between flex-1'>
                   <button
                     onClick={() => handleSeek(product.startTime)}
-                    className='w-full mb-2 block flex-1'
+                    className='w-full mb-2 flex-1'
+                    type='button'
                   >
-                    <img
+                    <Image
                       src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/w_300,h_300,c_pad/${product.publicId}.jpg`}
                       alt={product.productName}
-                      className='rounded-md w-full h-full object-contain'
+                      width={300}
+                      height={300}
+                      sizes='(min-width:1024px) 256px, 100vw'
+                      className='rounded-md object-contain w-full h-full'
+                      priority={isActive}
                     />
                   </button>
-                  <a
+
+                  <Link
                     href={product.onClick.args.url}
                     className='inline-block w-full text-center py-1.5 px-2 text-xs font-medium bg-primary text-white rounded hover:bg-primary/90 transition'
                   >
-                    Buy Now →
-                  </a>
+                    Buy&nbsp;Now →
+                  </Link>
+
+                  {/* Discount banner kept exactly as before */}
                   <div className='mt-2 text-xs text-center text-green-600 animate-pulse'>
                     🎉 Use code <strong>LOVE20</strong> for 20% off!
                   </div>
