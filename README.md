@@ -54,8 +54,8 @@
 
 ```bash
 # 1. Clone the repo
-git clone https://github.com/your-username/shoppable-video-demo.git
-cd shoppable-video-demo
+git clone https://github.com/musebe/Shoppable-Video-Demo-Next.js-Cloudinary.git
+cd Shoppable-Video-Demo-Next.js-Cloudinary
 
 # 2. Install dependencies
 npm install
