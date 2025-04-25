@@ -1,24 +1,15 @@
+/* Only spec-compliant keys */
 export const SHOPPABLE_CONFIG = {
-    // --- Shoppable root ---
     shoppable: {
         transformation: { crop: 'pad', aspect_ratio: '1' },
 
-        /** Universal UI behaviour */
-        ui: {
-            autoShow: 'onStart',      // open card when product starts
-            hideOnEnd: true,          // close when product ends
-            showSidePanel: true,      // thumbnails column always visible
-            showPopup: true,          // large overlay on click
-            badgePosition: 'top-left',
-        },
+        /* runtime-overridden in the component */
+        startState: 'closed' as const,
+        autoClose: 0,
 
-        /** Post-roll gallery (“Shop the Video”) */
-        endScreen: {
-            show: true,
-            mode: 'product',          // grid of product cards
-            title: 'Shop the Video',
-            replayButton: true,
-        },
+        /* Post-roll gallery */
+        showPostPlayOverlay: true,
+        bannerMsg: 'Shop the Video',
 
         products: [
             {
@@ -63,4 +54,4 @@ export const SHOPPABLE_CONFIG = {
             },
         ],
     },
-} as const;
+} as const
