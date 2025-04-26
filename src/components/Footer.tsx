@@ -5,66 +5,91 @@ import { motion } from 'motion/react';
 export function Footer() {
   return (
     <motion.footer
-      initial={{ opacity: 0, y: 50 }}
+      initial={{ opacity: 0, y: 40 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}
-      transition={{ duration: 0.6 }}
-      className='mt-auto bg-gray-50 text-gray-600 py-8'
+      transition={{ duration: 0.5 }}
+      /* slimmer footer bar */
+      className='mt-auto bg-gray-50 text-gray-600 py-4'
     >
-      <div className='max-w-7xl mx-auto grid grid-cols-1 gap-6 px-4 sm:grid-cols-2 lg:grid-cols-4'>
-        <div>
-          <h4 className='mb-2 text-lg font-semibold'>ShoppableVideo</h4>
-          <p className='text-sm'>Demo store powered by Next.js & Cloudinary.</p>
+      <div className='mx-auto max-w-7xl flex flex-col items-center gap-4 px-4'>
+        {/* project tagline */}
+        <p className='text-sm font-medium'>
+          ShoppableVideo &mdash; demo powered by
+          Next.js&nbsp;&amp;&nbsp;Cloudinary
+        </p>
+
+        {/* tech badges displayed in a single row, wrapping on small screens */}
+        <div className='flex flex-wrap justify-center gap-2 text-xs'>
+          <a
+            href='https://nextjs.org/'
+            target='_blank'
+            rel='noopener noreferrer'
+          >
+            <img
+              src='https://img.shields.io/badge/Next.js-15-blue?logo=next.js'
+              alt='Next.js 15 badge'
+              height={24}
+            />
+          </a>
+          <a
+            href='https://cloudinary.com/'
+            target='_blank'
+            rel='noopener noreferrer'
+          >
+            <img
+              src='https://img.shields.io/badge/Cloudinary-Video--Player-lightblue?logo=cloudinary'
+              alt='Cloudinary badge'
+              height={24}
+            />
+          </a>
+          <a
+            href='https://tailwindcss.com/'
+            target='_blank'
+            rel='noopener noreferrer'
+          >
+            <img
+              src='https://img.shields.io/badge/Tailwind-4.0-38BDF8?logo=tailwindcss'
+              alt='Tailwind CSS badge'
+              height={24}
+            />
+          </a>
+          <a
+            href='https://ui.shadcn.com/'
+            target='_blank'
+            rel='noopener noreferrer'
+          >
+            <img
+              src='https://img.shields.io/badge/shadcn.ui-components-pink?logo=tailwindcss'
+              alt='shadcn/ui badge'
+              height={24}
+            />
+          </a>
+          <a
+            href='https://motion.dev/'
+            target='_blank'
+            rel='noopener noreferrer'
+          >
+            <img
+              src='https://img.shields.io/badge/Motion.dev-framer--motion-orange?logo=motion'
+              alt='Motion.dev badge'
+              height={24}
+            />
+          </a>
         </div>
-        <div>
-          <h4 className='mb-2 text-lg font-semibold'>Resources</h4>
-          <ul className='space-y-1 text-sm'>
-            {[
-              ['Cloudinary', 'https://cloudinary.com'],
-              ['Next.js', 'https://nextjs.org'],
-              ['Motion.dev', 'https://motion.dev'],
-              ['shadcn/ui', 'https://ui.shadcn.com'],
-            ].map(([name, url]) => (
-              <li key={name}>
-                <a
-                  href={url}
-                  className='hover:text-gray-900 hover:underline'
-                  target='_blank'
-                  rel='noopener noreferrer'
-                >
-                  {name}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div>
-          <h4 className='mb-2 text-lg font-semibold'>Company</h4>
-          <ul className='space-y-1 text-sm'>
-            {['About', 'Blog', 'Careers'].map((item) => (
-              <li key={item}>
-                <a href='#' className='hover:text-gray-900 hover:underline'>
-                  {item}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-        <div>
-          <h4 className='mb-2 text-lg font-semibold'>Legal</h4>
-          <ul className='space-y-1 text-sm'>
-            {['Privacy Policy', 'Terms of Service'].map((item) => (
-              <li key={item}>
-                <a href='#' className='hover:text-gray-900 hover:underline'>
-                  {item}
-                </a>
-              </li>
-            ))}
-          </ul>
-        </div>
-      </div>
-      <div className='mt-6 text-center text-xs text-gray-400'>
-        © {new Date().getFullYear()} ShoppableVideo Demo. All rights reserved.
+
+        {/* author & repo */}
+        <p className='text-xs text-gray-500 text-center'>
+          Built by{' '}
+          <a
+            href='https://github.com/musebe/Shoppable-Video-Demo-Next.js-Cloudinary'
+            target='_blank'
+            rel='noopener noreferrer'
+            className='underline hover:text-gray-700'
+          >
+            Eugine&nbsp;Musebe
+          </a>
+        </p>
       </div>
     </motion.footer>
   );
