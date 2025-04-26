@@ -1,3 +1,4 @@
+// src/components/ShoppableVideoPlayer.tsx
 'use client';
 
 import { useEffect, useRef } from 'react';
@@ -77,7 +78,7 @@ export function ShoppableVideoPlayer({ onTimeUpdate }: Props) {
       className='w-full max-w-3xl mx-auto'
     >
       <video
-        key='shoppable-main'
+        id='cld-video' // ← add this
         ref={videoRef}
         className='cld-video-player cld-fluid'
         preload='metadata'

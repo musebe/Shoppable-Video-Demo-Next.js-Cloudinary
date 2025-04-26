@@ -1,3 +1,4 @@
+// src/components/ProductSidePanel.tsx
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
@@ -5,6 +6,7 @@ import { motion } from 'motion/react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { getShoppablePlayer } from '@/lib/cloudinary-player';
 
 type Product = {
   productId: number;
@@ -12,15 +14,8 @@ type Product = {
   startTime: number;
   endTime: number;
   publicId: string;
-  onClick: {
-    action: string;
-    pause: boolean;
-    args: { url: string };
-  };
-  onHover?: {
-    action: string;
-    args: { publicId: string };
-  };
+  onClick: { action: string; pause: boolean; args: { url: string } };
+  onHover?: { action: string; args: { publicId: string } };
 };
 
 type Props = {
@@ -29,8 +24,8 @@ type Props = {
   resetSignal: number;
 };
 
-const BUFFER = 0.15; // fade-in delay
-const SCROLL_PAD = 12; // px padding under header
+const BUFFER = 0.15; // fade‐in threshold
+const SCROLL_PAD = 12; // scroll offset under header
 
 export function ProductSidePanel({
   products,
@@ -39,23 +34,16 @@ export function ProductSidePanel({
 }: Props) {
   const containerRef = useRef<HTMLDivElement>(null);
   const productRefs = useRef<Record<number, HTMLDivElement>>({});
-  const videoRef = useRef<HTMLVideoElement | null>(null);
-
   const [seenIds, setSeenIds] = useState<number[]>([]);
 
-  /* reset on replay */
+  // Reset when replay hits
   useEffect(() => {
     setSeenIds([]);
     productRefs.current = {};
     containerRef.current?.scrollTo({ top: 0 });
   }, [resetSignal]);
 
-  /* capture Cloudinary video once */
-  useEffect(() => {
-    videoRef.current = document.querySelector('video#cld-video');
-  }, []);
-
-  /* mark products as seen */
+  // Mark products seen as time progresses
   useEffect(() => {
     const newSeen = products
       .filter(
@@ -64,36 +52,38 @@ export function ProductSidePanel({
       )
       .map((p) => p.productId);
 
-    if (newSeen.length) setSeenIds((prev) => [...prev, ...newSeen]);
+    if (newSeen.length > 0) {
+      setSeenIds((prev) => [...prev, ...newSeen]);
+    }
   }, [currentTime, products, seenIds]);
 
   const visible = products.filter((p) => seenIds.includes(p.productId));
-
   const active = products.find(
     (p) => currentTime >= p.startTime && currentTime <= p.endTime
   );
 
-  /* scroll to active card */
+  // Scroll panel to the active card
   useEffect(() => {
     if (!active) return;
     const el = productRefs.current[active.productId];
     const wrap = containerRef.current;
     if (!el || !wrap) return;
-
     requestAnimationFrame(() => {
-      wrap.scrollTo({ top: el.offsetTop - SCROLL_PAD, behavior: 'smooth' });
+      wrap.scrollTo({
+        top: el.offsetTop - SCROLL_PAD,
+        behavior: 'smooth',
+      });
     });
   }, [active?.productId, visible.length]);
 
-  /* seek helper */
+  // Seek-and-pause via the real Video.js API
   const handleSeek = (t: number) => {
-    if (videoRef.current) {
-      videoRef.current.currentTime = t;
-      videoRef.current.play();
-    }
+    const player = getShoppablePlayer();
+    if (!player) return;
+    player.pause(); // Video.js API
+    player.currentTime(t); // Video.js API
   };
 
-  /* ───────── render ───────── */
   return (
     <div
       ref={containerRef}
@@ -108,7 +98,6 @@ export function ProductSidePanel({
       ) : (
         visible.map((p) => {
           const isActive = p.productId === active?.productId;
-
           return (
             <motion.div
               key={p.productId}
@@ -132,14 +121,13 @@ export function ProductSidePanel({
                 </CardHeader>
 
                 <CardContent className='p-2 flex flex-col justify-between flex-1'>
-                  {/* thumbnail → seek */}
+                  {/* thumbnail → seek & pause */}
                   <button
                     type='button'
                     onClick={() => handleSeek(p.startTime)}
                     className='w-full mb-2 flex-1'
                   >
                     <Image
-                      onClick={() => handleSeek(p.startTime)}
                       src={`https://res.cloudinary.com/${process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}/image/upload/w_300,h_300,c_pad/${p.publicId}.jpg`}
                       alt={p.productName}
                       width={300}
