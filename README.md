@@ -1,6 +1,6 @@
 # 🛍️ How to Add Shoppable Videos to Your Next.js E-commerce Store with Cloudinary 📹
 
-![Shoppable Video Demo Preview](demo.png)
+![Shoppable Video Demo Preview](shoppable.png)
 
 > A modern demo storefront showcasing how to make your videos shoppable—turn viewers into buyers! 🚀
 
