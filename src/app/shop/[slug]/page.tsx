@@ -5,6 +5,13 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { SHOPPABLE_CONFIG } from '@/lib/shoppable-config';
 
+/**
+ * Force this route to stay static and
+ * revalidate every minute (Incremental Static Regeneration)
+ */
+export const dynamic = 'force-static';
+export const revalidate = 60; // seconds
+
 type Params = { slug: string };
 
 // 1️⃣ SSG: pre-render these at build time
@@ -14,15 +21,17 @@ export function generateStaticParams(): Params[] {
   }));
 }
 
-// 2️⃣ Page component with no custom PageProps type
-export default function ProductPage({
+// 2️⃣ Page component using the async Request API
+export default async function ProductPage({
   params,
+  searchParams,
 }: {
-  params: Params;
-  // Next.js may pass searchParams; allow them so TS is happy
-  searchParams?: Record<string, string | string[]>;
+  params: Promise<Params>;
+  searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
-  const { slug } = params;
+  // Await those Promises before you use them
+  const { slug } = await params;
+
   const product = SHOPPABLE_CONFIG.shoppable.products.find((p) =>
     p.onClick.args.url.endsWith(slug)
   );
@@ -54,8 +63,8 @@ export default function ProductPage({
           </div>
 
           <p className='mt-4 text-gray-700 leading-relaxed'>
-            {product.productName} is a premium item in our collection—crafted to
-            perfection and available now. Click “Buy Now” to grab yours!
+            {product.productName} is a premium item in our collection— crafted
+            to perfection and available now. Click “Buy Now” to grab yours!
           </p>
 
           <div className='mt-4'>
