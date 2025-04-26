@@ -12,6 +12,7 @@ export function Navbar() {
   const links = [
     { label: 'Home', href: '/' },
     { label: 'About Shoppable', href: '/about' },
+    { label: 'Shop', href: '/shop' },
   ];
 
   return (
