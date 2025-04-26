@@ -1,5 +1,4 @@
 // src/app/shop/[slug]/page.tsx
-
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import Link from 'next/link';
@@ -7,9 +6,7 @@ import { SHOPPABLE_CONFIG } from '@/lib/shoppable-config';
 
 type Params = { slug: string };
 
-/**
- * Tell Next.js to prerender each product page at build time
- */
+// Tell Next.js to prerender these three pages at build time
 export function generateStaticParams(): Params[] {
   return SHOPPABLE_CONFIG.shoppable.products.map((p) => {
     const slug = p.onClick.args.url.split('/').pop()!;
@@ -17,8 +14,14 @@ export function generateStaticParams(): Params[] {
   });
 }
 
-export default function ProductPage({ params }: { params: Params }) {
-  const slug = params.slug;
+// Extend to include searchParams so it satisfies PageProps<Params>
+type PageProps = {
+  params: Params;
+  searchParams?: Record<string, string | string[]>;
+};
+
+export default function ProductPage({ params }: PageProps) {
+  const { slug } = params;
   const product = SHOPPABLE_CONFIG.shoppable.products.find((p) =>
     p.onClick.args.url.endsWith(slug)
   );
