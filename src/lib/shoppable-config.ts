@@ -1,4 +1,7 @@
+// src/lib/shoppable-config.ts
+
 /* Only spec-compliant keys */
+
 export const SHOPPABLE_CONFIG = {
     shoppable: {
         transformation: { crop: 'pad', aspect_ratio: '1' },

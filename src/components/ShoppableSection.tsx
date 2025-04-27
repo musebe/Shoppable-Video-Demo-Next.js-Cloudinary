@@ -1,3 +1,5 @@
+// src/components/ShoppableSection.tsx
+
 'use client';
 
 import { useEffect, useState } from 'react';
